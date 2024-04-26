@@ -5,13 +5,12 @@
 
 # Define function to generate query
 gen_query <- function(con,input){
-  return(suppressWarnings(fetch(dbSendQuery(con,input), n=-1)))
+  return(suppressWarnings(fetch(dbSendQuery(con,input),n=-1)))
 }
 
 ## scoring table
 gen_scoring_table <- function(all_df,products){
   scoring_df <- products[,c("amount","installments","id")]
-  # scoring_df<-as.data.frame(table(products$amount,products$installments))
   names(scoring_df)<-c("amount","installments","loan_id")
   for(var in names(scoring_df)){
     if(is.factor(scoring_df[,var])){
@@ -27,9 +26,9 @@ gen_scoring_table <- function(all_df,products){
 gen_group_scores <- function(var,flag_beh){
   
   if(flag_beh==1){
-    cutoffs <- cu_repeat_app
+    cutoffs <- cu_app
   } else {
-    cutoffs <- cu_first_app
+    cutoffs <- cu_rep
   }
   
   output<-ifelse(var>cutoffs[1],"Bad",

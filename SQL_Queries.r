@@ -38,7 +38,7 @@ gen_big_sql_query <- function(db_name,loan_id){
     ".personal_data.personable_id
     WHERE loans.id =", loan_id," 
     AND personal_data.personable_type = 
-    'App\\\\Models\\\\Clients\\\\Client';", sep="")
+    'App\\\\Models\\\\Clients\\\\Client'", sep="")
   return(big_sql_query)
 }
 
@@ -58,3 +58,12 @@ gen_products_query <- function(db_name,all_df){
   return(paste("SELECT * FROM ", db_name, ".product_amounts_and_installments
                 WHERE product_id IN (",all_df$product_id, ")", sep=""))
 }
+
+# Get client income
+gen_income_query <- function(db_name,all_df){
+  return(paste("SELECT incomeable_id AS client_id, amount AS income 
+    FROM ",db_name,".client_incomes WHERE incomeable_id = ",
+    all_df$master_client_id,"
+    AND incomeable_type = 'App\\\\Models\\\\Clients\\\\Client'",sep=""))
+}
+

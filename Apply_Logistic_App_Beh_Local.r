@@ -44,7 +44,7 @@ main_dir <- paste0("\\\\192.168.2.30\\Analyses\\Shared\\Scorecards\\",
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 loan_id <- args[1]
-#loan_id <- 12789
+#loan_id <- 25351
 product_id <- NA
 
 
@@ -60,7 +60,7 @@ source(paste(main_dir,"Generate_Adjust_Score.r", sep=""))
 
 
 # Load modeling libraries
-load("rdata\\app_beh_model.rdata")
+load("rdata\\flexcredit_app.rdata")
 
 
 ####################################
@@ -69,6 +69,12 @@ load("rdata\\app_beh_model.rdata")
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,loan_id))
+
+
+# Get income 
+all_df$income <- ifelse(length(
+  gen_query(con,gen_income_query(db_name,all_df))$income)==0,NA,
+  gen_query(con,gen_income_query(db_name,all_df))$income)
 
 
 # Apply some checks to main credit dataframe
@@ -104,11 +110,10 @@ all_df <- gen_demographic_stats(all_df)
 
 
 # Apply scoring model
-scoring_df <- gen_apply_score(all_df,products,flag_beh)
+scoring_df <- gen_apply_score(all_df,products,flag_beh,df_Log_App,df_Log_App)
 
 
-# Apply policy rules (to be included in later version)
-scoring_df$display_score <- "Yes"
+# Add fields
 scoring_df$created_at <- Sys.time()
 
 
@@ -122,7 +127,7 @@ all_df$flag_beh <- flag_beh
 final <- merge(all_df,scoring_df,by.x = c("loan_id","amount","installments"),
    by.y = c("loan_id","amount","installments"),all.x = TRUE)[,c("loan_id",
   "flag_beh","score","display_score","pd","age","gender","ownership",
-  "total_work_experience")]
+  "total_work_experience","income")]
 
 
 # Read and write

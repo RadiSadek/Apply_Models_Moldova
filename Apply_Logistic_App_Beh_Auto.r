@@ -70,8 +70,11 @@ con <- dbConnect(MySQL(), user=db_username,
 ### Mode
 sqlMode <- paste("SET sql_mode=''", sep ="")
 suppressWarnings(dbSendQuery(con, sqlMode))
+
 ### Encoding
-suppressWarnings(dbSendQuery(con,"SET names 'utf8mb4' COLLATE 'utf8mb4_romanian_ci';"))
+suppressWarnings(dbSendQuery(con,
+  "SET names 'utf8mb4' COLLATE 'utf8mb4_romanian_ci';"))
+
 
 
 #################################
@@ -92,7 +95,7 @@ source(file.path(base_dir,"Generate_Adjust_Score.r"))
 ######################
 
 # Load predefined libraries
-rdata <- file.path(base_dir, "rdata","app_beh_model.rdata")
+rdata <- file.path(base_dir, "rdata","flexcredit_app.rdata")
 load(rdata)
 
 
@@ -102,6 +105,12 @@ load(rdata)
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,loan_id))
+
+
+# Get income 
+all_df$income <- ifelse(length(
+  gen_query(con,gen_income_query(db_name,all_df))$income)==0,NA,
+  gen_query(con,gen_income_query(db_name,all_df))$income)
 
 
 # Apply some checks to main credit dataframe
@@ -137,11 +146,10 @@ all_df <- gen_demographic_stats(all_df)
 
 
 # Apply scoring model
-scoring_df <- gen_apply_score(all_df,products,flag_beh)
+scoring_df <- gen_apply_score(all_df,products,flag_beh,df_Log_App,df_Log_App)
 
 
-# Apply policy rules (to be included in later version)
-#scoring_df$display_score <- "Yes"
+# Add fields
 scoring_df$created_at <- Sys.time()
 
 
