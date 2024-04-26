@@ -99,11 +99,9 @@ load(rdata)
 ####################################
 ### Read database and build data ###
 ####################################
-print("intialization successful!")
 
 # Read credits applications
-all_df <- suppressWarnings(dbFetch(dbSendQuery(con, 
-                                   gen_big_sql_query(db_name,loan_id)), n=-1))
+all_df <- gen_query(con,gen_big_sql_query(db_name,loan_id))
 
 
 # Apply some checks to main credit dataframe
@@ -114,9 +112,10 @@ if(nrow(all_df)>1){
   all_df <- all_df[!duplicated(all_df$loan_id),]
 }
 
+
 # Read product's periods and amounts
-products  <- suppressWarnings(dbFetch(dbSendQuery(con, 
-                                                  gen_products_query(db_name,all_df)), n=-1))
+products <- gen_query(con,gen_products_query(db_name,all_df))
+
 
 # Get closets to product amount and installments 
 all_df$installments <- products$installments[
@@ -126,35 +125,36 @@ all_df$amount <- products$amount[
 
 
 # Check all credits of client
-all_credits <- suppressWarnings(dbFetch(dbSendQuery(con, 
-                    gen_all_credits_query(db_name,all_df)), n=-1))
+all_credits <- gen_query(con,gen_all_credits_query(db_name,all_df))
+
 
 # Compute flag repeats
 flag_beh <- ifelse(nrow(all_credits)>0,1,0)
 
 
 # Demographical criteria
-all_df<-gen_demographic_stats(all_df)
+all_df <- gen_demographic_stats(all_df)
+
 
 # Apply scoring model
-scoring_df<-gen_apply_score(all_df,products,flag_beh)
+scoring_df <- gen_apply_score(all_df,products,flag_beh)
+
 
 # Apply policy rules (to be included in later version)
-#scoring_df$display_score<-scoring_df$score
-scoring_df$created_at<-Sys.time()
+#scoring_df$display_score <- "Yes"
+scoring_df$created_at <- Sys.time()
+
 
 # Update table credits applications scoring
 write_sql_query <- paste("
-  DELETE FROM ",db_name,".loan_scoring WHERE loan_id=",
-                         loan_id, sep="")
+  DELETE FROM ",db_name,".loan_scoring WHERE loan_id=",loan_id, sep="")
 suppressMessages(dbSendQuery(con,write_sql_query))
 suppressMessages(dbWriteTable(con, name = "loan_scoring", 
-                  value = scoring_df,
-                  field.types = c(loan_id="numeric", amount="integer", 
-                                  installments="integer", score="character(20)",
-                                  color="integer", display_score="character(20)",
-                                  pd="numeric",created_at="datetime"),
-                  row.names = F, append = T))
+    value = scoring_df,field.types = c(loan_id="numeric", amount="integer", 
+    installments="integer", score="character(20)",
+    color="integer", display_score="character(20)",pd="numeric",
+    created_at="datetime"),row.names = F, append = T))
+
 
 #######
 # END #

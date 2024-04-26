@@ -5,7 +5,7 @@
 
 # Define function to generate query
 gen_query <- function(con,input){
-  return(suppressWarnings(fetch(dbSendQuery(con,input), n=-1)))
+  return(suppressWarnings(dbFetch(dbSendQuery(con,input))))
 }
 
 ## scoring table

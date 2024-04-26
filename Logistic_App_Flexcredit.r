@@ -8,12 +8,12 @@ gen_app_flex <- function(all_df,products,model){
   scoring_df<-gen_scoring_table(all_df,products)
   
   # Cut and bin
-  all_df$age_group<-
+  all_df$age_group <-
     ifelse(is.na(all_df$age),"18-25",
     ifelse(all_df$age<=25,"18-25",
     ifelse(all_df$age<=50,"26-50","51+")))
   
-  all_df$marital_status_group<-
+  all_df$marital_status_group <-
     ifelse(is.na(all_df$marital_status),"Married/Widowed",
     ifelse(all_df$marital_status %in% c(1,4,5),"Married/Widowed",
     ifelse(all_df$marital_status %in% c(2),"Single","Divorced")))
